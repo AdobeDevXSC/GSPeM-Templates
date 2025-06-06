@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WKND Responsive Layout</title>
+    <link rel="stylesheet" href="https://use.typekit.net/qap0nun.css" rel="stylesheet">
+ 
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .background-image {
+            width: 100%;
+            height: 100%;            
+            object-fit: cover;
+        }
+        .content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        .bottom-text {
+            position: absolute;
+            bottom: 40px;
+            left: 50px;
+            font-family: 'Source Sans Pro', Arial, sans-serif;  
+            font-weight: bold;
+            font-size: 80px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            width: 70%;
+        }
+        .logo {
+            position: absolute;
+            bottom: 2%;
+            right: 3%;
+            width: 15%;
+         
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="{{image}}" alt="WKND Adventure Background" class="background-image">
+        <div class="content">
+            <div class="bottom-text">{{on_image_text}}</div>
+            {{#if brand_logo}}
+                <img src="{{brand_logo}}" alt="WK Logo" class="logo" />   
+            {{else}} 
+                <img src="data:image/png;base64,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" alt="WK Logo" class="logo" />
+            {{/if}}                    
+        </div>
+    </div>
+</body>
+</html>
