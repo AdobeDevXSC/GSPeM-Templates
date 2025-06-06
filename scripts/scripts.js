@@ -13,6 +13,41 @@ import {
   loadCSS,
 } from './aem.js';
 
+export function makeVideo(element, href) {
+  // Set up the video and its source
+  element.innerHTML = `
+    <video loop muted playsInline>
+      <source data-src="${href}" type="video/mp4" />
+    </video>
+    <button class="play-pause-button">&#10074;&#10074;</button>
+  `;
+
+  const video = element.querySelector('video');
+  const source = element.querySelector('video > source');
+  const playPauseButton = element.querySelector('.play-pause-button');
+
+  source.src = source.dataset.src;
+  video.load();
+
+  // Video loaded event
+  video.addEventListener('loadeddata', () => {
+    video.setAttribute('autoplay', true);
+    video.setAttribute('data-loaded', true);
+    video.play();
+  });
+
+  // Play/Pause button toggle functionality
+  playPauseButton.addEventListener('click', () => {
+    if (!video.paused) {
+      video.pause();
+      playPauseButton.innerHTML = '&#9654;'; // Play icon
+    } else {
+      video.play();
+      playPauseButton.innerHTML = '&#10074;&#10074;'; // Pause icon
+    }
+  });
+}
+
 /**
  * Builds hero block and prepends to main in a new section.
  * @param {Element} main The container element
