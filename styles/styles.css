@@ -20,13 +20,13 @@
   --link-hover-color: #1d3ecf;
 
   /* fonts */
-  --body-font-family: roboto, roboto-fallback, sans-serif;
+  --body-font-family: Adobe Clean, roboto-fallback, sans-serif;
   --heading-font-family: roboto-condensed, roboto-condensed-fallback, sans-serif;
 
   /* body sizes */
   --body-font-size-m: 22px;
-  --body-font-size-s: 19px;
-  --body-font-size-xs: 17px;
+  --body-font-size-s: 18px;
+  --body-font-size-xs: 16px;
 
   /* heading sizes */
   --heading-font-size-xxl: 55px;
@@ -249,9 +249,107 @@ main > .section:first-of-type {
 }
 
 /* section metadata */
-main .section.light,
-main .section.highlight {
+main .section.light {
   background-color: var(--light-color);
+}
+
+main .section.highlight {
+  background: linear-gradient(90deg, rgb(113, 37, 182) 0%, rgb(183, 34, 133) 26%, rgb(235, 16, 0) 63%, rgb(255, 98, 87)) 100% center;
+}
+
+main .section.highlight > .default-content-wrapper {
+  color: #fff;
+}
+
+main .section.highlight > .default-content-wrapper > h1,
+main .section.highlight > .default-content-wrapper > p {
   margin: 0;
-  padding: 40px 0;
+}
+
+main .section.highlight > .default-content-wrapper a {
+  color: inherit;
+  text-decoration: underline;
+  font-style: italic;
+}
+
+main .section.full-width {
+  padding: 0;
+}
+
+main .section.full-width > div {
+  max-width: 100%;
+}
+
+main .section.sm-padding {
+  padding: 1rem;
+}
+
+main .section.md-padding {
+  padding: 2.5rem 1rem;
+}
+
+main .section.lg-padding {
+  padding: 5rem 1rem;
+}
+
+/* other */
+
+/* Modal Container */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0 0 0 / 65%);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 10% auto;
+  padding: 2rem;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 750px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0 0 0 / 50%);
+}
+
+@media (width <= 768px) {
+  .modal-content {
+    margin-top: 100px;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.close {
+  color: #aaa;
+  font-size: 40px;
+  font-weight: bold;
+  position: absolute;
+  right: -15px;
+  top: -30px;
+  line-height: normal;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#demo-notes-content {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333;
 }
