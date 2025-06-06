@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Altura Technology - Meta Ad</title>
+    <link rel="stylesheet" href="https://use.typekit.net/qap0nun.css" rel="stylesheet">
+ 
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .background-image {
+            width: 100%;
+            height: 100%;            
+            object-fit: cover;
+        }
+        .content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        .bottom-text {
+            position: absolute;
+            bottom: 40px;
+            left: 50px;
+            font-family: 'Source Sans Pro', Arial, sans-serif;  
+            font-weight: bold;
+            font-size: 80px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            width: 70%;
+        }
+        .logo {
+            position: absolute;
+            bottom: 2%;
+            right: 3%;
+            width: 15%;
+         
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="{{image}}" alt="Brand Background" class="background-image">
+        <div class="content">
+            <div class="bottom-text">{{on_image_text}}</div>
+            {{#if brand_logo}}
+                <img src="{{brand_logo}}" alt="Brand Logo" class="logo" />   
+            {{else}} 
+                <img src="data:image/jpeg;base64,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" alt="Altura Technology Logo" class="logo" />  
+            {{/if}}                    
+        </div>
+    </div>
+</body>
+</html>
