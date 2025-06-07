@@ -3,32 +3,48 @@ import { createOptimizedPicture } from '../../scripts/aem.js';
 /** Sets up a modal for previewing assets **/
 export function setupPreviewModal() {
   const modalHTML = `
-    <div class="tag-modal">
-      <div class="tag-modal-content">
-        <span class="tag-modal-close">&times;</span>
+    <div class="tag-modal" role="dialog" aria-modal="true" aria-label="Asset preview">
+      <div class="tag-modal-content" tabindex="-1">
+        <button class="tag-modal-close" aria-label="Close">&times;</button>
         <div class="tag-modal-body">
-          <p>Loading...</p>
+          <div class="loader"></div>
         </div>
       </div>
     </div>
   `;
   
   document.body.insertAdjacentHTML('beforeend', modalHTML);
-  
-  // Close modal when clicking the close button
   const modal = document.querySelector('.tag-modal');
-  modal.querySelector('.tag-modal-close').addEventListener('click', () => {
+  const modalContent = modal.querySelector('.tag-modal-content');
+  
+  // Close handlers
+  const closeModal = () => {
     modal.classList.remove('show');
-    modal.querySelector('.tag-modal-body').innerHTML = '<p>Loading...</p>';
+    modal.querySelector('.tag-modal-body').innerHTML = '<div class="loader"></div>';
+    document.body.style.overflow = 'auto';
+  };
+  
+  modal.querySelector('.tag-modal-close').addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => e.target === modal && closeModal());
+  
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('show')) {
+      closeModal();
+    }
   });
 }
 
 /** Fetches data from the spreadsheet JSON **/
 export async function fetchSpreadsheetData(url) {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error('Failed to fetch data');
-  const json = await response.json();
-  return json?.data || [];
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const json = await response.json();
+    return json?.data || [];
+  } catch (error) {
+    console.error('Failed to fetch spreadsheet data:', error);
+    return []; // Fail gracefully
+  }
 }
 
 /** Enhances raw data by organizing assets into categories **/
@@ -59,21 +75,46 @@ export function enhanceDataWithAssets(data) {
       ...item,
       emailAssets,
       displayAdAssets,
-      metaAdAssets
+      metaAdAssets,
+      // Add filterable categories
+      categories: [
+        ...(item.Email === 'true' ? ['email'] : []),
+        ...(item.DisplayAd === 'true' ? ['display-ad'] : []),
+        ...(item.MetaAd === 'true' ? ['meta-ad'] : [])
+      ]
     };
   });
 }
 
 /** Creates template cards and adds them to the block **/
-export function createTemplateCards(block, data) {
-  const cardsList = document.createElement('ul');
+export function createTemplateCards(block, data, page = 1, itemsPerPage = 8) {
+  const startIndex = (page - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = data.slice(startIndex, endIndex);
 
-  data.forEach(item => {
-    const card = createTemplateCard(item);
-    cardsList.appendChild(card);
-  });
+  const cardsList = document.createElement('ul');
+  cardsList.className = 'templates-grid';
+
+  if (paginatedData.length === 0) {
+    const noResults = document.createElement('div');
+    noResults.className = 'no-results';
+    noResults.textContent = 'No templates found matching your criteria.';
+    cardsList.appendChild(noResults);
+  } else {
+    paginatedData.forEach(item => {
+      const card = createTemplateCard(item);
+      cardsList.appendChild(card);
+    });
+  }
+
+  // Clear existing cards
+  const existingGrid = block.querySelector('.templates-grid');
+  if (existingGrid) existingGrid.remove();
 
   block.appendChild(cardsList);
+  
+  // Return whether there are more items
+  return endIndex < data.length;
 }
 
 /** Creates a single template card element **/
@@ -92,6 +133,9 @@ function createTemplateCard(item) {
 
   // Create card HTML
   const card = document.createElement('li');
+  card.className = 'template-card';
+  card.dataset.categories = item.categories.join(' ');
+  
   card.innerHTML = `
     <div class="cards-card-image-flip">
       <div class="flip-inner">
@@ -100,8 +144,8 @@ function createTemplateCard(item) {
         </div>
         <div class="flip-back">
           <div class="resources">
-            <a href="${item.GitHub}" title="GitHub" target="_blank">
-              <img src="/icons/github-logo.svg" alt="GitHub">
+            <a href="${item.GitHub}" title="GitHub" target="_blank" rel="noopener noreferrer">
+              <img src="/icons/github-logo.svg" alt="GitHub" width="60" height="60">
             </a>
             <div class="templates-container">
               ${createAssetSection('Email', item.emailAssets)}
@@ -116,15 +160,14 @@ function createTemplateCard(item) {
       <p>${item.Opportunity}</p>
       <div class="tags">
         ${hasEmail ? '<span class="tag tag-email">Email</span>' : ''}
-        ${hasDisplayAd ? '<span class="tag tag-display">Display Ad</span>' : ''}
-        ${hasMetaAd ? '<span class="tag tag-meta">Meta Ad</span>' : ''}
+        ${hasDisplayAd ? '<span class="tag tag-display-ad">Display Ad</span>' : ''}
+        ${hasMetaAd ? '<span class="tag tag-meta-ad">Meta Ad</span>' : ''}
       </div>
     </div>
   `;
 
   // Add flip interaction
   setupCardFlipInteraction(card);
-
   // Add tag click handlers for preview
   setupTagPreviewInteractions(card);
 
@@ -153,16 +196,21 @@ function createAssetSection(title, assets) {
 
 /** Sets up flip interaction for a card **/
 function setupCardFlipInteraction(card) {
+  let flipTimeout;
+  
   card.addEventListener('click', () => {
-    const allFlipped = document.querySelectorAll('.flip-inner.flipped');
-    allFlipped.forEach(flipped => {
-      if (flipped !== card.querySelector('.flip-inner')) {
-        flipped.classList.remove('flipped');
-      }
-    });
+    clearTimeout(flipTimeout);
+    flipTimeout = setTimeout(() => {
+      const allFlipped = document.querySelectorAll('.flip-inner.flipped');
+      allFlipped.forEach(flipped => {
+        if (flipped !== card.querySelector('.flip-inner')) {
+          flipped.classList.remove('flipped');
+        }
+      });
 
-    const flipContainer = card.querySelector('.flip-inner');
-    flipContainer.classList.toggle('flipped');
+      const flipContainer = card.querySelector('.flip-inner');
+      flipContainer.classList.toggle('flipped');
+    }, 100); // Small delay to prevent accidental flips
   });
 }
 
@@ -190,9 +238,112 @@ function showAssetPreview(title, src) {
            alt="${title}" 
            loading="eager"
            decoding="async"
+           width="600"
+           height="400"
            style="max-width: 100%; margin-top: 1em;">
     ` : '<p><em>Preview unavailable</em></p>'}
   `;
   
   modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  modal.querySelector('.tag-modal-content').focus();
+}
+
+// In createFilterControls() - Remove apply/reset buttons and add event listeners
+export function createFilterControls(block, data, onFilterChange) {
+  const filterContainer = document.createElement('div');
+  filterContainer.className = 'templates-filters';
+  
+  filterContainer.innerHTML = `
+    <div class="filter-section">
+      <h3>Filter by Type</h3>
+      <div class="filter-options">
+        <label>
+          <input type="checkbox" name="filter" value="email" checked> Email
+        </label>
+        <label>
+          <input type="checkbox" name="filter" value="display-ad" checked> Display Ad
+        </label>
+        <label>
+          <input type="checkbox" name="filter" value="meta-ad" checked> Meta Ad
+        </label>
+      </div>
+    </div>
+  `;
+  
+  // Add event listeners to checkboxes
+  filterContainer.querySelectorAll('input[name="filter"]').forEach(checkbox => {
+    checkbox.addEventListener('change', onFilterChange);
+  });
+  
+  block.prepend(filterContainer);
+}
+
+/** Creates pagination controls **/
+export function createPaginationControls(block, data, currentPage, itemsPerPage, hasMore) {
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const paginationContainer = document.createElement('div');
+  paginationContainer.className = 'templates-pagination';
+  
+  paginationContainer.innerHTML = `
+    <div class="pagination-info">
+      Showing ${Math.min(data.length, currentPage * itemsPerPage)} of ${data.length} templates
+    </div>
+    <div class="pagination-controls">
+      <button class="pagination-prev" ${currentPage === 1 ? 'disabled' : ''}>
+        Previous
+      </button>
+      <span class="pagination-page">Page ${currentPage} of ${totalPages}</span>
+      <button class="pagination-next" ${!hasMore ? 'disabled' : ''}>
+        Next
+      </button>
+    </div>
+  `;
+  
+  block.appendChild(paginationContainer);
+}
+
+/** Creates error message HTML */
+export function createErrorMessage(spreadsheetLink) {
+  return `
+    <div class="templates-error">
+      <p>Failed to load templates.</p>
+      ${spreadsheetLink ? `<a href="${spreadsheetLink}" target="_blank">View data source</a>` : ''}
+    </div>
+  `;
+}
+
+/** Handles pagination rendering and event setup */
+export function setupPagination(contentArea, filteredData, currentPage, itemsPerPage, renderCallback) {
+  const hasMore = createTemplateCards(contentArea, filteredData, currentPage, itemsPerPage);
+  
+  if (filteredData.length > 0) {
+    createPaginationControls(contentArea, filteredData, currentPage, itemsPerPage, hasMore);
+    
+    contentArea.querySelector('.pagination-prev')?.addEventListener('click', () => {
+      if (currentPage > 1) {
+        renderCallback(currentPage - 1);
+      }
+    });
+    
+    contentArea.querySelector('.pagination-next')?.addEventListener('click', () => {
+      const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+      if (currentPage < totalPages) {
+        renderCallback(currentPage + 1);
+      }
+    });
+  }
+}
+
+/** Creates the main container structure */
+export function createTemplateContainer(block) {
+  const container = document.createElement('div');
+  container.className = 'templates-container';
+  block.appendChild(container);
+  
+  const contentArea = document.createElement('div');
+  contentArea.className = 'templates-content';
+  container.appendChild(contentArea);
+  
+  return { container, contentArea };
 }
