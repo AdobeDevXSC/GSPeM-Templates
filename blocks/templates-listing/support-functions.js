@@ -7,7 +7,6 @@ export function setupPreviewModal() {
       <div class="tag-modal-content" tabindex="-1">
         <button class="tag-modal-close" aria-label="Close">&times;</button>
         <div class="tag-modal-body">
-          <div class="loader"></div>
         </div>
       </div>
     </div>
@@ -20,7 +19,6 @@ export function setupPreviewModal() {
   // Close handlers
   const closeModal = () => {
     modal.classList.remove('show');
-    modal.querySelector('.tag-modal-body').innerHTML = '<div class="loader"></div>';
     document.body.style.overflow = 'auto';
   };
   
@@ -256,7 +254,7 @@ export function createFilterControls(block, data, onFilterChange) {
   
   filterContainer.innerHTML = `
     <div class="filter-section">
-      <h3>Filter by Type</h3>
+      <h5>Template Type</h5>
       <div class="filter-options">
         <label>
           <input type="checkbox" name="filter" value="email" checked> Email
