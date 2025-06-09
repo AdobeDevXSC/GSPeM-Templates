@@ -1,8 +1,8 @@
 # GSPeM Templates Portfolio
 
 ## Environments
-- Preview: https://main--{repo}--{owner}.aem.page/
-- Live: https://main--{repo}--{owner}.aem.live/
+- Preview: https://main--gspem-templates--adobedevxsc.aem.page/
+- Live: https://main--gspem-templates--adobedevxsc.aem.live/
 
 ## Documentation
 
